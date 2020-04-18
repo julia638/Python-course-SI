@@ -1,5 +1,5 @@
 import requests
-import numpy
+
 def bitbay_ticker_data():
     response = requests.get("https://bitbay.net/API/Public/BTC/USD/ticker.json")
     return response.json()
