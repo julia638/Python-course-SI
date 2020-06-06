@@ -1,0 +1,5 @@
+
+Badając na przedziale ok.pół roku 2020-01-01 do 2020-06-07
+1)Bliższy rzeczywistości okazał się wykres drugi który porównywał średnie z 100 symulacji do rzeczywistych wartości, ponieważ na pierwszym wykresie wartości przewidywane są losowane raz z określonych przedziałów.
+Wnioski swoje wysuwam na podstawie analizy wykresu.
+2) Na przedziale pół roku wartości przewidywane i rzeczywiste były bardzo do siebie podobne, na przedziale ok. 5 dni(2020-01-01 do 2020-01-06) wartości wogóle do siebie nie pasowały.

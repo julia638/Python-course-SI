@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from matplotlib.pyplot import *
 
 public_url = "https://poloniex.com/public"
+date_format = '%Y-%m-%d'
 
 
 class Diff:
@@ -56,16 +57,18 @@ def calculate_diff(data, index):
     return abs(data[index] - data[index + 1])
 
 
-def generate(start_date, pair):
+def generate(start_date, middle_date, end_date, pair):
     first_x_data = []
     second_x_data = []
-    old_data, times = currency_data(start_date, pair)
+    old_data, times = currency_data(start_date, middle_date, pair)
+    real_data, ignored = currency_data(middle_date, end_date, pair)
+
     for i in range(len(times)):
         first_x_data.append(to_day_of_month(datetime.utcfromtimestamp(times[i])))
 
-    second_x_data.append(first_x_data[-1])
+    second_x_data.append(first_x_data[0])
     for i in range(len(first_x_data)):
-        second_x_data.append(to_day_of_month(datetime.now() + timedelta(days=i)))
+        second_x_data.append(to_day_of_month(start_date + timedelta(days=i)))
 
     averages = [0] * (len(old_data) + 1)
     for i in range(100):
@@ -75,19 +78,30 @@ def generate(start_date, pair):
 
     for i in range(len(averages)):
         averages[i] = averages[i] / 100
-    plot(first_x_data, old_data, '#CCFFFF', label='Pobrane dane')
+
+    average_diff = []
+    single_data_diff = []
+
+    for i in range(len(averages)):
+        average_diff.append(abs(real_data[i] - averages[i]))
+        single_data_diff.append(abs(real_data[i] - predicted_data[i]))
+
     plot(second_x_data, predicted_data, '#CCCC33', label='Dane przewidywane')
     plot(second_x_data, averages, '#FFCCCC', label='Średnie przewidywane')
+    plot(second_x_data, real_data)
+    show()
 
+    plot(second_x_data, average_diff, '#CCCC33', label='Średnie')
+    plot(second_x_data, single_data_diff, '#FFCCCC', label='Odchylenie')
+    plot(second_x_data, real_data)
     show()
 
 
-def currency_data(starting_date, currency_pair):
+def currency_data(starting_date, ending_date, currency_pair):
     request = {'command': 'returnChartData',
                'currencyPair': currency_pair,
-               'start': (datetime.strptime(starting_date,
-                                           '%Y-%m-%d').timestamp()),
-               'end': (datetime.now().timestamp()),
+               'start': (starting_date.timestamp()),
+               'end': (ending_date.timestamp()),
                'period': 86400
                }
     response = requests.get(public_url, params=request).json()
@@ -114,23 +128,31 @@ while True:
     option = input('Wybierz opcję:')
 
     if option != 'q':
-        start_date = input("Wpisz date: YYYY-MM-DD \n")
-        if datetime.strptime(start_date, '%Y-%m-%d') > datetime.now():
-            print('Data nie mozesz być późniejsza niż dzisiejsza\n')
+        start_date = datetime.strptime(input("Wpisz początkową date: YYYY-MM-DD \n"), date_format)
+        if start_date >= datetime.now():
+            print('Data początku musi być wcześniejsza niż dzisiejsza\n')
             option = '0'
+
+        end_date = datetime.strptime(input("Wpisz końcową date: YYYY-MM-DD \n"), date_format)
+        if end_date > datetime.now():
+            print('Data nie może być późniejsza niż dzisiejsza\n')
+            option = '0'
+
+        delta = end_date - start_date
+        old_start_date = start_date - timedelta(days=delta.days - 1)
 
     try:
         if option == '1':
-            generate(start_date, 'USDT_ETH')
+            generate(old_start_date, start_date, end_date, 'USDT_ETH')
 
         if option == '2':
-            generate(start_date, 'USDT_BTC')
+            generate(old_start_date, start_date, end_date, 'USDT_BTC')
 
         if option == '3':
-            generate(start_date, 'USDT_TRX')
+            generate(old_start_date, start_date, end_date, 'USDT_TRX')
 
     except NameError:
-        print('Data startu nie została zdefiniowana')
+        print('Daty nie zostały poprawnie zdefiniowane')
 
     if option == 'q':
         exit('Koniec')
